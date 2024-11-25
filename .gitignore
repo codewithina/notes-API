@@ -1,0 +1,5 @@
+# Ignorera node_modules och andra filer
+node_modules/
+.env
+.serverless/
+.DS_Store
