@@ -1,0 +1,78 @@
+service: notes-api
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: dev
+  region: eu-north-1
+
+functions:
+  # Auth functions
+  signup:
+    handler: auth.signup
+    events:
+      - http:
+          path: user/signup
+          method: post
+          cors: true
+
+  login:
+    handler: auth.login
+    events:
+      - http:
+          path: user/login
+          method: post
+          cors: true
+
+  # Notes functions
+  getNotes:
+    handler: notes.getNotes
+    events:
+      - http:
+          path: notes
+          method: get
+          cors: true
+          authorizer: aws_iam  
+
+  addNote:
+    handler: notes.addNote
+    events:
+      - http:
+          path: notes
+          method: post
+          cors: true
+          authorizer: aws_iam 
+
+  updateNote:
+    handler: notes.updateNote
+    events:
+      - http:
+          path: notes
+          method: put
+          cors: true
+          authorizer: aws_iam 
+
+  deleteNote:
+    handler: notes.deleteNote
+    events:
+      - http:
+          path: notes
+          method: delete
+          cors: true
+          authorizer: aws_iam
+
+resources:
+  Resources:
+    NotesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: NotesTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
