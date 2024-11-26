@@ -2,9 +2,14 @@ service: notes-api
 
 provider:
   name: aws
-  runtime: nodejs14.x
-  stage: dev
+  runtime: nodejs18.x
   region: eu-north-1
+  stage: dev
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+      Resource: arn:aws:dynamodb:eu-north-1:816069166797:table/NotesTable
 
 functions:
   # Auth functions
@@ -26,40 +31,37 @@ functions:
 
   # Notes functions
   getNotes:
-    handler: notes.getNotes
+    handler: handler.getNotes  # Kopplar till handler.js och funktionen getNotes
     events:
       - http:
           path: notes
           method: get
           cors: true
-          authorizer: aws_iam  
 
   addNote:
-    handler: notes.addNote
+    handler: handler.addNote  # Kopplar till handler.js och funktionen addNote
     events:
       - http:
           path: notes
           method: post
           cors: true
-          authorizer: aws_iam 
 
   updateNote:
-    handler: notes.updateNote
+    handler: handler.updateNote  # Kopplar till handler.js och funktionen updateNote
     events:
       - http:
           path: notes
           method: put
           cors: true
-          authorizer: aws_iam 
 
   deleteNote:
-    handler: notes.deleteNote
+    handler: handler.deleteNote  # Kopplar till handler.js och funktionen deleteNote
     events:
       - http:
-          path: notes
+          path: notes/{id}
           method: delete
           cors: true
-          authorizer: aws_iam
+
 
 resources:
   Resources:
@@ -72,6 +74,19 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: UsersTable
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 5
