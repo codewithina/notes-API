@@ -1,4 +1,4 @@
-const { getNotes, addNote, updateNote, deleteNote } = require('./handlers/notes');
+const { getNotes, addNote, updateNote, deleteNote } = require('./functions/notes');
 
 module.exports.getNotes = getNotes;
 module.exports.addNote = addNote;

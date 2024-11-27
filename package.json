@@ -11,6 +11,8 @@
   "dependencies": {
     "@middy/http-json-body-parser": "^6.0.0",
     "aws-sdk": "^2.1692.0",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
     "middy": "^0.36.0",
     "serverless": "^4.4.12",
     "serverless-offline": "^14.3.4",
