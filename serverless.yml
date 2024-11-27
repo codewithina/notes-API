@@ -9,12 +9,22 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:eu-north-1:816069166797:table/NotesTable
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem
+      Resource: arn:aws:dynamodb:eu-north-1:816069166797:table/UsersTable
 
 functions:
   # Auth functions
   signup:
-    handler: auth.signup
+    handler: functions/auth.signup
     events:
       - http:
           path: user/signup
@@ -22,7 +32,7 @@ functions:
           cors: true
 
   login:
-    handler: auth.login
+    handler: functions/auth.login
     events:
       - http:
           path: user/login
@@ -31,7 +41,7 @@ functions:
 
   # Notes functions
   getNotes:
-    handler: handler.getNotes  # Kopplar till handler.js och funktionen getNotes
+    handler: handler.getNotes  
     events:
       - http:
           path: notes
@@ -39,7 +49,7 @@ functions:
           cors: true
 
   addNote:
-    handler: handler.addNote  # Kopplar till handler.js och funktionen addNote
+    handler: handler.addNote  
     events:
       - http:
           path: notes
@@ -47,7 +57,7 @@ functions:
           cors: true
 
   updateNote:
-    handler: handler.updateNote  # Kopplar till handler.js och funktionen updateNote
+    handler: handler.updateNote 
     events:
       - http:
           path: notes
@@ -55,13 +65,12 @@ functions:
           cors: true
 
   deleteNote:
-    handler: handler.deleteNote  # Kopplar till handler.js och funktionen deleteNote
+    handler: handler.deleteNote 
     events:
       - http:
           path: notes/{id}
           method: delete
           cors: true
-
 
 resources:
   Resources:
