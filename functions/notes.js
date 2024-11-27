@@ -1,8 +1,8 @@
-const AWS = require('aws-sdk');
+import AWS from 'aws-sdk';
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = 'NotesTable';
 
-module.exports.getNotes = async (userId) => {
+export const getNotes = async (userId) => {
   const params = {
     TableName: TABLE_NAME,
     FilterExpression: 'userId = :userId',
@@ -24,7 +24,7 @@ module.exports.getNotes = async (userId) => {
   }
 };
 
-module.exports.addNote = async (noteData) => {
+export const addNote = async (noteData) => {
   const { title, content, userId } = noteData;
 
   if (!title || !content) {
@@ -61,7 +61,7 @@ module.exports.addNote = async (noteData) => {
   }
 };
 
-module.exports.updateNote = async (noteData) => {
+export const updateNote = async (noteData) => {
   const { id, title, content, userId } = noteData;
 
   if (!id || !title || !content) {
@@ -98,7 +98,7 @@ module.exports.updateNote = async (noteData) => {
   }
 };
 
-module.exports.deleteNote = async (id, userId) => {
+export const deleteNote = async (id, userId) => {
   if (!id) {
     return {
       statusCode: 400,
