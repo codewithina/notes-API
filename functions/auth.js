@@ -1,11 +1,11 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const AWS = require('aws-sdk');
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import AWS from 'aws-sdk';
 
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const USERS_TABLE = 'UsersTable';
 
-module.exports.signup = async (event) => {
+export const signup = async (event) => {
   const { email, password } = JSON.parse(event.body);
 
   if (!email || !password) {
@@ -40,7 +40,7 @@ module.exports.signup = async (event) => {
   }
 };
 
-module.exports.login = async (event) => {
+export const login = async (event) => {
   const { email, password } = JSON.parse(event.body);
 
   if (!email || !password) {
