@@ -2,39 +2,30 @@ const AWS = require('aws-sdk');
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = 'NotesTable';
 
-module.exports.getNotes = async () => {
-    console.log('Get Notes triggered');
-    try {
-      const params = {
-        TableName: TABLE_NAME,
-      };
-  
-      const result = await dynamoDb.scan(params).promise();
-  
-      // If no notes
-      if (!result.Items || result.Items.length === 0) {
-        return {
-          statusCode: 200,
-          body: JSON.stringify([]), 
-        };
-      }
-  
-      // If notes exists 
-      return {
-        statusCode: 200,
-        body: JSON.stringify(result.Items),
-      };
-    } catch (error) {
-      console.error('Error fetching notes:', error);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
-      };
-    }
+module.exports.getNotes = async (userId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    FilterExpression: 'userId = :userId',
+    ExpressionAttributeValues: { ':userId': userId },
   };
 
-module.exports.addNote = async (event) => {
-  const { title, content } = JSON.parse(event.body);
+  try {
+    const result = await dynamoDb.scan(params).promise();
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result.Items),
+    };
+  } catch (error) {
+    console.error('Error fetching notes:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: 'Internal Server Error' }),
+    };
+  }
+};
+
+module.exports.addNote = async (noteData) => {
+  const { title, content, userId } = noteData;
 
   if (!title || !content) {
     return {
@@ -46,9 +37,12 @@ module.exports.addNote = async (event) => {
   const params = {
     TableName: TABLE_NAME,
     Item: {
-      id: new Date().toISOString(), // ID with date
+      id: new Date().toISOString(),
       title,
       content,
+      userId,
+      createdAt: new Date().toISOString(),
+      modifiedAt: new Date().toISOString(),
     },
   };
 
@@ -67,8 +61,8 @@ module.exports.addNote = async (event) => {
   }
 };
 
-module.exports.updateNote = async (event) => {
-  const { id, title, content } = JSON.parse(event.body);
+module.exports.updateNote = async (noteData) => {
+  const { id, title, content, userId } = noteData;
 
   if (!id || !title || !content) {
     return {
@@ -80,10 +74,11 @@ module.exports.updateNote = async (event) => {
   const params = {
     TableName: TABLE_NAME,
     Key: { id },
-    UpdateExpression: 'set title = :title, content = :content',
+    UpdateExpression: 'set title = :title, content = :content, modifiedAt = :modifiedAt',
     ExpressionAttributeValues: {
       ':title': title,
       ':content': content,
+      ':modifiedAt': new Date().toISOString(),
     },
     ReturnValues: 'ALL_NEW',
   };
@@ -103,9 +98,7 @@ module.exports.updateNote = async (event) => {
   }
 };
 
-module.exports.deleteNote = async (event) => {
-  const { id } = event.pathParameters;
-
+module.exports.deleteNote = async (id, userId) => {
   if (!id) {
     return {
       statusCode: 400,
@@ -116,6 +109,10 @@ module.exports.deleteNote = async (event) => {
   const params = {
     TableName: TABLE_NAME,
     Key: { id },
+    ConditionExpression: 'userId = :userId', 
+    ExpressionAttributeValues: {
+      ':userId': userId,
+    },
   };
 
   try {
