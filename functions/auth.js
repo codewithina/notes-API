@@ -5,6 +5,15 @@ import AWS from 'aws-sdk';
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const USERS_TABLE = 'UsersTable';
 
+const validateEmail = (email) => {
+  const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  return re.test(email);
+};
+
+const validatePassword = (password) => {
+  return password.length >= 6; 
+};
+
 export const signup = async (event) => {
   const { email, password } = JSON.parse(event.body);
 
@@ -12,6 +21,20 @@ export const signup = async (event) => {
     return {
       statusCode: 400,
       body: JSON.stringify({ message: 'Email and password are required' }),
+    };
+  }
+
+  if (!validateEmail(email)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: 'Invalid email format' }),
+    };
+  }
+
+  if (!validatePassword(password)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: 'Password must be at least 6 characters long' }),
     };
   }
 
@@ -35,7 +58,7 @@ export const signup = async (event) => {
     console.error('Error creating user:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Failed to create user' }),
+      body: JSON.stringify({ message: 'Failed to create user', error: error.message }),
     };
   }
 };
@@ -50,6 +73,13 @@ export const login = async (event) => {
     };
   }
 
+  if (!validateEmail(email)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: 'Invalid email format' }),
+    };
+  }
+
   const params = {
     TableName: USERS_TABLE,
     Key: { email },
@@ -60,8 +90,8 @@ export const login = async (event) => {
 
     if (!result.Item) {
       return {
-        statusCode: 400,
-        body: JSON.stringify({ message: 'Invalid credentials' }),
+        statusCode: 404,
+        body: JSON.stringify({ message: 'User not found' }),
       };
     }
 
@@ -69,7 +99,7 @@ export const login = async (event) => {
 
     if (!isValidPassword) {
       return {
-        statusCode: 400,
+        statusCode: 401, 
         body: JSON.stringify({ message: 'Invalid credentials' }),
       };
     }
@@ -84,7 +114,7 @@ export const login = async (event) => {
     console.error('Error logging in:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Failed to log in' }),
+      body: JSON.stringify({ message: 'Failed to log in', error: error.message }),
     };
   }
 };
