@@ -2,6 +2,26 @@ import AWS from 'aws-sdk';
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = 'NotesTable';
 
+const validateTitleLength = (title) => {
+  if (title.length > 50) {
+    return {
+      valid: false,
+      message: 'Title must be less than or equal to 50 characters',
+    };
+  }
+  return { valid: true };
+};
+
+const validateTextLength = (text) => {
+  if (text.length > 300) {
+    return {
+      valid: false,
+      message: 'Text must be less than or equal to 300 characters',
+    };
+  }
+  return { valid: true };
+};
+
 export const getNotes = async (userId) => {
   const params = {
     TableName: TABLE_NAME,
@@ -32,6 +52,22 @@ export const getNotes = async (userId) => {
 
 export const addNote = async (noteData) => {
   const { title, text, userId } = noteData;
+
+  const titleValidation = validateTitleLength(title);
+  if (!titleValidation.valid) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: titleValidation.message }),
+    };
+  }
+
+  const textValidation = validateTextLength(text);
+  if (!textValidation.valid) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: textValidation.message }),
+    };
+  }
 
   if (!title || !text) {
     return {
@@ -70,6 +106,22 @@ export const addNote = async (noteData) => {
 
 export const updateNote = async (noteData) => {
   const { id, title, text, userId } = noteData;
+
+  const titleValidation = validateTitleLength(title);
+  if (!titleValidation.valid) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: titleValidation.message }),
+    };
+  }
+
+  const textValidation = validateTextLength(text);
+  if (!textValidation.valid) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: textValidation.message }),
+    };
+  }
 
   if (!id || !title || !text) {
     return {
