@@ -11,6 +11,12 @@ export const getNotes = async (userId) => {
 
   try {
     const result = await dynamoDb.scan(params).promise();
+    if (!result.Items || result.Items.length === 0) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ message: 'No notes found for this user' }),
+      };
+    }
     return {
       statusCode: 200,
       body: JSON.stringify(result.Items),
@@ -27,22 +33,23 @@ export const getNotes = async (userId) => {
 export const addNote = async (noteData) => {
   const { title, text, userId } = noteData;
 
-  if (!title ||  text) {
+  if (!title || !text) {
     return {
       statusCode: 400,
       body: JSON.stringify({ message: 'Title and text are required' }),
     };
   }
 
+  const timestamp = new Date().toISOString();
   const params = {
     TableName: TABLE_NAME,
     Item: {
-      id: new Date().toISOString(),
+      id: timestamp,
       title,
       text,
       userId,
-      createdAt: new Date().toISOString(),
-      modifiedAt: new Date().toISOString(),
+      createdAt: timestamp,
+      modifiedAt: timestamp,
     },
   };
 
@@ -64,7 +71,7 @@ export const addNote = async (noteData) => {
 export const updateNote = async (noteData) => {
   const { id, title, text, userId } = noteData;
 
-  if (!id || !title ||  text) {
+  if (!id || !title || !text) {
     return {
       statusCode: 400,
       body: JSON.stringify({ message: 'ID, title, and text are required' }),
@@ -74,10 +81,14 @@ export const updateNote = async (noteData) => {
   const params = {
     TableName: TABLE_NAME,
     Key: { id },
-    UpdateExpression: 'set title = :title, text =  text, modifiedAt = :modifiedAt',
+    UpdateExpression: 'set #title = :title, #text = :text, modifiedAt = :modifiedAt',
+    ExpressionAttributeNames: {
+      '#title': 'title',
+      '#text': 'text',
+    },
     ExpressionAttributeValues: {
       ':title': title,
-      ' text': text,
+      ':text': text,
       ':modifiedAt': new Date().toISOString(),
     },
     ReturnValues: 'ALL_NEW',
@@ -85,6 +96,12 @@ export const updateNote = async (noteData) => {
 
   try {
     const result = await dynamoDb.update(params).promise();
+    if (!result.Attributes) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ message: 'Note not found' }),
+      };
+    }
     return {
       statusCode: 200,
       body: JSON.stringify(result.Attributes),
@@ -109,14 +126,20 @@ export const deleteNote = async (id, userId) => {
   const params = {
     TableName: TABLE_NAME,
     Key: { id },
-    ConditionExpression: 'userId = :userId', 
+    ConditionExpression: 'userId = :userId',
     ExpressionAttributeValues: {
       ':userId': userId,
     },
   };
 
   try {
-    await dynamoDb.delete(params).promise();
+    const result = await dynamoDb.delete(params).promise();
+    if (!result) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ message: 'Note not found' }),
+      };
+    }
     return {
       statusCode: 200,
       body: JSON.stringify({ message: 'Note deleted successfully' }),
