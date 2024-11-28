@@ -25,12 +25,12 @@ export const getNotes = async (userId) => {
 };
 
 export const addNote = async (noteData) => {
-  const { title, content, userId } = noteData;
+  const { title, text, userId } = noteData;
 
-  if (!title || !content) {
+  if (!title ||  text) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ message: 'Title and content are required' }),
+      body: JSON.stringify({ message: 'Title and text are required' }),
     };
   }
 
@@ -39,7 +39,7 @@ export const addNote = async (noteData) => {
     Item: {
       id: new Date().toISOString(),
       title,
-      content,
+      text,
       userId,
       createdAt: new Date().toISOString(),
       modifiedAt: new Date().toISOString(),
@@ -62,22 +62,22 @@ export const addNote = async (noteData) => {
 };
 
 export const updateNote = async (noteData) => {
-  const { id, title, content, userId } = noteData;
+  const { id, title, text, userId } = noteData;
 
-  if (!id || !title || !content) {
+  if (!id || !title ||  text) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ message: 'ID, title, and content are required' }),
+      body: JSON.stringify({ message: 'ID, title, and text are required' }),
     };
   }
 
   const params = {
     TableName: TABLE_NAME,
     Key: { id },
-    UpdateExpression: 'set title = :title, content = :content, modifiedAt = :modifiedAt',
+    UpdateExpression: 'set title = :title, text =  text, modifiedAt = :modifiedAt',
     ExpressionAttributeValues: {
       ':title': title,
-      ':content': content,
+      ' text': text,
       ':modifiedAt': new Date().toISOString(),
     },
     ReturnValues: 'ALL_NEW',
